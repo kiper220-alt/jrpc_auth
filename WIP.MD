@@ -125,54 +125,72 @@ classDiagram
     namespace User Storage {
         class IUserStorage {
             <<interface>>
-            +authenticate(username, password) QVariantMap
-            +getUserInfo(username) QVariantMap
+            +authenticate(username, password_hash, hash_function) AuthResult
+            +getUserInfo(id) UserInfo
         }
-        class PamUserStorage {
-            +authenticate(username, password) QVariantMap
-            +getUserInfo(username) QVariantMap
+        class JsonUserStorage {
+            -Samba storage
+            +authenticate(username, password_hash, hash_function) AuthResult
+            +getUserInfo(id) UserInfo
         }
         class SambaUserStorage {
             -Samba storage
-            +authenticate(username, password) QVariantMap
-            +getUserInfo(username) QVariantMap
+            +authenticate(username, password_hash, hash_function) AuthResult
+            +getUserInfo(id) UserInfo
+        }
+        class FreeIpaUserStorage {
+            -FreeIpa storage
+            +authenticate(username, password_hash, hash_function) AuthResult
+            +getUserInfo(id) UserInfo
         }
         class OpenLDAPUserStorage {
             -Samba storage
-            +authenticate(username, password) QVariantMap
-            +getUserInfo(username) QVariantMap
+            +authenticate(username, password_hash, hash_function) AuthResult
+            +getUserInfo(id) UserInfo
         }
     }
 
     namespace Auth Storage {
         class IAuthStorage {
             <<interface>>
-            +authenticate(username) QString
-            +getUserName(token) QString
+            +authenticate(username, password_hash) QString
+            +getUserInfo(token) QPair<QString, QString>
             +removeToken(token)
             +removeUser(username)
+            +removeUserByToken(token)
+            +begin()
+            +end()
         }
         class MemoryAuthStorage {
-            -QHash<QString, QString> token2user
+            -QHash<QString, QPair<QString, QString>> token2user
             -QHash<QString, QStringList> user2tokens
-            +authenticate(username) QString
-            +getUserName(token) QString
+            +authenticate(username, password_hash) QString
+            +getUserInfo(token) QPair<QString, QString>
             +removeToken(token)
             +removeUser(username)
+            +removeUserByToken(token)
+            +begin()
+            +end()
         }
         class RedisAuthStorage {
             -RedisDB controller
-            +authenticate(username) QString
-            +getUserName(token) QString
+            +authenticate(username, password_hash) QString
+            +getUserInfo(token) QPair<QString, QString>
             +removeToken(token)
             +removeUser(username)
+            +removeUserByToken(token)
+            +begin()
+            +end()
         }
         class ValkeyAuthStorage {
             -ValkeyDB controller
-            +authenticate(username) QString
-            +getUserName(token) QString
+            +authenticate(username, password_hash) QString
+            +getUserInfo(token) QPair<QString, QString>
             +removeToken(token)
             +removeUser(username)
+            +removeUserByToken(token)
+            +begin()
+            +end()
         }
     }
 
@@ -181,8 +199,9 @@ classDiagram
     IAuthStorage --|> MemoryAuthStorage: implements
     IAuthStorage --|> RedisAuthStorage: implements
     IAuthStorage --|> ValkeyAuthStorage: implements
-    IUserStorage --|> PamUserStorage: implements
+    IUserStorage --|> JsonUserStorage: implements
     IUserStorage --|> SambaUserStorage: implements
+    IUserStorage --|> FreeIpaUserStorage: implements
     IUserStorage --|> OpenLDAPUserStorage: implements
 ```
 
