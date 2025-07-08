@@ -1,1 +1,0 @@
-#include <auth_storage/mem_auth_storage.h>

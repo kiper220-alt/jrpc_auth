@@ -1,1 +1,0 @@
-#include <user_storage/iuser_storage.h>
