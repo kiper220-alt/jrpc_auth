@@ -15,7 +15,7 @@ public:
     Q_CLASSINFO("serviceName", "auth")
 
     AuthService(const AuthService &) = delete;
-
+  
     explicit AuthService(AuthServiceSettings &&settings, QObject *parent = nullptr);
 
     QVariantMap login(const QString &username, const QString &password);
