@@ -1,6 +1,7 @@
 #include <user_storage/psql_user_storage.h>
 #include <QtSql/qsqlquery.h>
 #include <QtSql/qsqldriver.h>
+#include <QtSql/qsqlerror.h>
 #include <QCryptographicHash>
 #include <QVariant>
 
