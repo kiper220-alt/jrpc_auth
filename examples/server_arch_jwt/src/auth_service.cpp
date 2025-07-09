@@ -1,10 +1,6 @@
 #include <auth_service.h>
 #include <jwt/jwt.hpp>
 
-std::string getSomeSecret() {
-    return "SomeSecret";
-}
-
 AuthService::AuthService(AuthServiceSettings &&settings, QObject *parent) : QJsonRpcService(parent),
                                                                                                auths(std::move(settings.authStorage)),
                                                                                                users(std::move(settings.userStorages))
@@ -36,6 +32,10 @@ bool AuthService::checkAuth(const QString &token) {
         }
     }
     return false;
+}
+
+QString AuthService::test() {
+    return "test";
 }
 
 QVariantMap AuthService::getIdentity(const QString &token) {

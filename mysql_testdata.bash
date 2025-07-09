@@ -1,26 +1,10 @@
 #!/usr/bin/bash
 
-if [ -z "$DATABASE_HOST" ]; then
-    export DATABASE_HOST=127.0.0.1
-fi
-if [ -z "$DATABASE_PORT" ]; then
-    export DATABASE_PORT=5432
-fi
-if [ -z "$DATABASE_SCHEMA" ]; then
-    export DATABASE_SCHEMA=public
-fi
-if [ -z "$DATABASE_NAME" ]; then
-    export DATABASE_NAME=db
-fi 
-if [ -z "$DATABASE_USER" ]; then
-    export DATABASE_USER=db
-fi
-if [ -z "$DATABASE_PASSWORD" ]; then
-    export DATABASE_PASSWORD=db
-fi 
-if [ -z "$DATABASE_DRIVER" ]; then
-    export DATABASE_DRIVER=QPSQL
-fi
+set -o allexport
+source .env
+
+export QJSONRPC_DEBUG=1
+export QT_ASSUME_STDERR_HAS_CONSOLE=1
 
 function add_user_query() {
     username="$1"
@@ -30,10 +14,33 @@ function add_user_query() {
     echo "INSERT INTO ${DATABASE_SCHEMA}.Users (username, password) VALUES('$username', '$passwordsum');"
 }
 
+function response_with_body() {
+    echo $(curl -s -X POST\
+        -H "Content-Type: application/json" \
+        -H "Accept: application/json" \
+        -d "$1" \
+        http://localhost:7777/api)
+}
+
 function login_query() {
     username="$1"
     password="$2"
-    echo {"id": 0, "jsonrpc": "2.0","method": "auth.login", "params": [$username, $password]};
+    
+    REQUEST="
+{
+    \"jsonrpc\": "2.0",
+    \"method\": \"auth.login\",
+    \"params\": [\"$username\", \"$password\"],
+    \"id\": \"$(date +%s%N)\"
+}"
+
+    echo "$REQUEST"
+
+    response_with_body "$REQUEST"
+    
+    if [ $? -ne 0 ]; then 
+        exit 1
+    fi
 }
 
 function call_psql() {
@@ -62,8 +69,11 @@ call_psql \
 
 cd build
 
-./ServerArchJwt &
+./ServerArchJwt & pids=( $! )
 
 sleep 1
 
 # TODO: write test workflow
+login_query admin admin
+
+kill ${pids[0]}

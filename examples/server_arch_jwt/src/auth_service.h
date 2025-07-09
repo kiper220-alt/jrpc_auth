@@ -13,7 +13,6 @@ typedef struct AuthServiceSettings {
 } AuthServiceSettings;
 
 class AuthService : public QJsonRpcService {
-public:
     Q_OBJECT
     Q_CLASSINFO("serviceName", "auth")
 
@@ -22,11 +21,15 @@ public:
   
     explicit AuthService(AuthServiceSettings &&settings, QObject *parent = nullptr);
 
+public Q_SLOTS:
+
     QVariantMap login(const QString &username, const QString &password);
 
     void logout(const QString &token);
 
     bool checkAuth(const QString &token);
+
+    QString test();
 
     QVariantMap getIdentity(const QString &token);
 
@@ -35,5 +38,6 @@ private:
 
     std::unique_ptr<IAuthStorage> auths;
 };
+
 
 #endif

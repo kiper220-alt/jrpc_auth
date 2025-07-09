@@ -4,13 +4,15 @@
 #include <QtSql/qsqlerror.h>
 #include <QCryptographicHash>
 #include <QVariant>
+#include <QDebug>
 
 #define DO_IF_NOT_EMPTY(x, y) if (!x.isEmpty()) { y(x); }
 #define DO_ELSE(x, y) else { y(x); }
 #define DO_IF_NOT_EMPTY_AS_INT(x, y) if (!x.isEmpty()) { y(x.toInt()); }
 
 const std::string& getPasswordSalt(){
-    const static std::string salt = std::getenv("SOME_PASSWORD_SALT"); // TODO: move to config
+    const static auto _salt = std::getenv("SOME_PASSWORD_SALT"); // TODO: move to config
+    const static std::string salt = _salt ? _salt : "SOME_PASSWORD_SALT";
     return salt;
 }
 
@@ -79,14 +81,19 @@ std::optional<QString> PsqlUserStorage::authenticate(const QString &username, co
     QString hashed = computePasswordHash(username, password);
 
     QString safeTable = this->db.driver()->escapeIdentifier(this->schema + ".Users", QSqlDriver::TableName);
-    query.prepare("SELECT password_hash FROM ? WHERE username = ?");
+    query.prepare("SELECT password FROM :table WHERE username = :username");
 
-    query.addBindValue(safeTable);
-    query.addBindValue(username);
+    query.bindValue(":table", safeTable);
+    query.bindValue(":username", username);
 
     if (query.exec() && query.next() && query.value(0).toString() == hashed) {
         return query.value(0).toString();
     }
+
+    qDebug() << query.lastQuery();
+
+    qDebug() << "User:" << username << "Password:" << password;
+    qDebug() << "Comparse hashes: " << hashed << "<=>" << query.value(0).toString();
 
     return std::nullopt;
 }
@@ -95,7 +102,7 @@ std::optional<QString> PsqlUserStorage::getUserVersion(const QString &username) 
     QSqlQuery query(db);
     
     QString safeTable = this->db.driver()->escapeIdentifier(this->schema + ".Users", QSqlDriver::TableName);
-    query.prepare("SELECT password_hash FROM ? WHERE username = ?");
+    query.prepare("SELECT password FROM ? WHERE username = ?");
 
     query.addBindValue(safeTable);
     query.addBindValue(username);
