@@ -1,3 +1,6 @@
+#ifndef IUSER_STORAGE_H
+#define IUSER_STORAGE_H
+
 #include <optional>
 #include <QString>
 
@@ -16,3 +19,5 @@ public:
     
     virtual ~IUserStorage() = default;
 };
+
+#endif // IUSER_STORAGE_H

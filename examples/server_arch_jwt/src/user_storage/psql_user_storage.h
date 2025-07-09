@@ -1,3 +1,6 @@
+#ifndef PSQL_USER_STORAGE_H
+#define PSQL_USER_STORAGE_H
+
 #include <user_storage/iuser_storage.h>
 #include <QtSql/qsqldatabase.h>
 
@@ -34,3 +37,5 @@ public:
     
     ~PsqlUserStorage() = default;
 };
+
+#endif

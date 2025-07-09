@@ -1,3 +1,6 @@
+#ifndef IAUTH_STORAGE_H
+#define IAUTH_STORAGE_H
+
 #include <optional>
 #include <utility>
 #include <QString>
@@ -22,3 +25,5 @@ public:
 
     virtual ~IAuthStorage() = default;
 };
+
+#endif // IAUTH_STORAGE_H

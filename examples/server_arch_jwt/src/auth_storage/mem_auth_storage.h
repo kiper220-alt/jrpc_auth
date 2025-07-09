@@ -1,3 +1,6 @@
+#ifndef MEM_AUTH_STORAGE_H
+#define MEM_AUTH_STORAGE_H
+
 #include <auth_storage/iauth_storage.h>
 #include <random>
 #include <QHash>
@@ -13,3 +16,5 @@ public:
     std::optional<QPair<QString, QString>> get(QString auth_id) override;
     void remove(QString auth_id) override;
 };
+
+#endif // MEM_AUTH_STORAGE_H

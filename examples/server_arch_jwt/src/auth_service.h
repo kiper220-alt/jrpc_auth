@@ -1,3 +1,6 @@
+#ifndef AUTH_SERVICE_H
+#define AUTH_SERVICE_H
+
 #include <qjsonrpc/qjsonrpcservice.h>
 #include <auth_storage/iauth_storage.h>
 #include <user_storage/iuser_storage.h>
@@ -32,3 +35,5 @@ private:
 
     std::unique_ptr<IAuthStorage> auths;
 };
+
+#endif
