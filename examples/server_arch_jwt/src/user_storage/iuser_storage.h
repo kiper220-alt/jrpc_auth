@@ -1,6 +1,7 @@
 #include <optional>
 #include <QString>
 
+
 class IUserStorage {
 public:
     /// @brief Just authenticate

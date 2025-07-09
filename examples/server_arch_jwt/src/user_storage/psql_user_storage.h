@@ -5,6 +5,7 @@
 /// Automatically connect to database. If connection fails, throw exception.
 /// parameters from environment:
 /// - DATABASE_HOST: database host address (default - local socket)
+/// - DATABASE_SCHEMA: database schema (default - "public")
 /// - DATABASE_DRIVER: database driver name (default - "QPSQL")
 /// - DATABASE_PORT: database port (default - depend on driver)
 /// - DATABASE_NAME: database name (default - "users")

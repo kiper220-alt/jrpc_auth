@@ -20,7 +20,7 @@ set(CMAKE_CXX_STANDARD 17)
 add_executable(${CMAKE_PROJECT_NAME} 
     main.cpp
     src/auth_service.cpp
-    #src/auth_storage/mem_auth_storage.cpp
+    src/auth_storage/mem_auth_storage.cpp
     src/user_storage/psql_user_storage.cpp
 )
 target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC
