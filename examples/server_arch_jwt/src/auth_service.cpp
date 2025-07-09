@@ -5,7 +5,7 @@ std::string getSomeSecret() {
     return "SomeSecret";
 }
 
-explicit AuthService::AuthService(AuthServiceSettings &&settings, QObject *parent = nullptr) : QJsonRpcService(parent),
+AuthService::AuthService(AuthServiceSettings &&settings, QObject *parent) : QJsonRpcService(parent),
                                                                                                auths(std::move(settings.authStorage)),
                                                                                                users(std::move(settings.userStorages))
 {

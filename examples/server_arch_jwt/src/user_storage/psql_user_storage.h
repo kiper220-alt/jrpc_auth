@@ -25,12 +25,12 @@ public:
     /// @param username authentication user name 
     /// @param password authentication password
     /// @return authentication version if success (can be hash of user data), otherwise std::nullopt.
-    std::optional<QString> authenticate(const QString &username, const QString &password) = 0;
+    std::optional<QString> authenticate(const QString &username, const QString &password) override;
 
     /// @brief Just get user version
     /// @param username user name
     /// @return user version if user exists, otherwise std::nullopt
-    std::optional<QString> getUserVersion(const QString &username) = 0;
+    std::optional<QString> getUserVersion(const QString &username) override;
     
     ~PsqlUserStorage() = default;
 };

@@ -68,7 +68,9 @@ PsqlUserStorage::PsqlUserStorage() {
     DO_IF_NOT_EMPTY(password, db.setPassword);
     db.setDatabaseName(name);
 
-    db.open();
+    if (!db.open()) {
+        throw std::runtime_error(db.lastError().text().toStdString());
+    }
 }
 
 std::optional<QString> PsqlUserStorage::authenticate(const QString &username, const QString &password) {
