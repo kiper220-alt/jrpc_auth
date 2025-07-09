@@ -9,6 +9,7 @@ set(CMAKE_AUTOUIC ON)
 find_package(Qt5 COMPONENTS
         Core
         Network
+        Sql
         REQUIRED)
 find_package(QJSonRPC REQUIRED)
 find_package(PkgConfig REQUIRED)
@@ -30,6 +31,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC
 target_link_libraries(${CMAKE_PROJECT_NAME}
         Qt::Core
         Qt::Network
+        Qt::Sql
         cpp-jwt::cpp-jwt
         ${QJSONRPC_LIBRARIES}
 )
