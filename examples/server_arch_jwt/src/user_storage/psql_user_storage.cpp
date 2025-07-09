@@ -1,5 +1,6 @@
 #include <user_storage/psql_user_storage.h>
 #include <QtSql/qsqlquery.h>
+#include <QtSql/qsqldriver.h>
 #include <QCryptographicHash>
 #include <QVariant>
 
@@ -41,12 +42,16 @@ PsqlUserStorage::PsqlUserStorage() {
     QString name = std::getenv("DATABASE_NAME");
     QString user = std::getenv("DATABASE_USER");
     QString password = std::getenv("DATABASE_PASSWORD");
+    this->schema = std::getenv("DATABASE_SCHEMA");
 
     if (driver.isEmpty()) {
         driver = "QPSQL";
     }
     if (name.isEmpty()) {
         name = "users";
+    }
+    if (this->schema.isEmpty()) {
+        this->schema = "public";
     }
     if (user.isEmpty()) {
         user = qgetenv("USER");
@@ -70,12 +75,14 @@ std::optional<QString> PsqlUserStorage::authenticate(const QString &username, co
     QSqlQuery query(db);
     QString hashed = computePasswordHash(username, password);
 
-    query.prepare("SELECT password_hash FROM Users WHERE username = :username");
-    query.bindValue(":username", username);
-    if (query.exec() && query.next()) {
-        if (query.value(0).toString() == hashed) {
-            return query.value(0).toString();
-        }
+    QString safeTable = this->db.driver()->escapeIdentifier(this->schema + ".Users", QSqlDriver::TableName);
+    query.prepare("SELECT password_hash FROM ? WHERE username = ?");
+
+    query.addBindValue(safeTable);
+    query.addBindValue(username);
+
+    if (query.exec() && query.next() && query.value(0).toString() == hashed) {
+        return query.value(0).toString();
     }
 
     return std::nullopt;
@@ -83,9 +90,13 @@ std::optional<QString> PsqlUserStorage::authenticate(const QString &username, co
 
 std::optional<QString> PsqlUserStorage::getUserVersion(const QString &username) {
     QSqlQuery query(db);
-    /// Get version from Users table.
-    query.prepare("SELECT password_hash FROM Users WHERE username = :username");
-    query.bindValue(":username", username);
+    
+    QString safeTable = this->db.driver()->escapeIdentifier(this->schema + ".Users", QSqlDriver::TableName);
+    query.prepare("SELECT password_hash FROM ? WHERE username = ?");
+
+    query.addBindValue(safeTable);
+    query.addBindValue(username);
+    
     if (query.exec() && query.next()) {
         return query.value(0).toString();
     }

@@ -16,6 +16,7 @@
 class PsqlUserStorage : public IUserStorage{
 private:
     QSqlDatabase db;
+    QString schema;
 public:
     /// @brief Default constructor
     PsqlUserStorage();
