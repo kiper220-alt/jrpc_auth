@@ -21,7 +21,7 @@ public:
         
     /// @brief remove authentication identifier
     /// @param auth_id authentication identifier to remove
-    virtual void remove(QString auth_id) = 0;
+    virtual bool remove(QString auth_id) = 0;
 
     virtual ~IAuthStorage() = default;
 };

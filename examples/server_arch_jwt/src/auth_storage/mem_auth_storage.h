@@ -11,10 +11,9 @@ class MemAuthStorage : public IAuthStorage
     std::mt19937 gen;
 public:
     MemAuthStorage(uint64_t seed = -1);
-
     QString authenticate(const QString &username, QString userVersion) override;
-    std::optional<QPair<QString, QString>> get(QString auth_id) override;
-    void remove(QString auth_id) override;
+    std::optional<QPair<QString, QString> > get(QString auth_id) override;
+    bool remove(QString auth_id) override;
 };
 
 #endif // MEM_AUTH_STORAGE_H

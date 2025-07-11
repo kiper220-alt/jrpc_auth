@@ -25,7 +25,7 @@ public Q_SLOTS:
 
     QVariantMap login(const QString &username, const QString &password);
 
-    void logout(const QString &token);
+    bool logout(const QString &token);
 
     bool checkAuth(const QString &token);
 

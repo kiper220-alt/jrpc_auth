@@ -29,8 +29,8 @@ QVariantMap AuthService::login(const QString &username, const QString &password)
     return {{"error", "Invalid username or password"}};
 }
 
-void AuthService::logout(const QString &token) {
-    auths->remove(token);
+bool AuthService::logout(const QString &token) {
+    return this->auths->remove(token);
 }
 
 bool AuthService::checkAuth(const QString &token) {

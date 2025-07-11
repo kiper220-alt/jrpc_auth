@@ -30,6 +30,7 @@ std::optional<QPair<QString, QString>> MemAuthStorage::get(QString auth_id) {
     }
     return std::nullopt;
 }
-void MemAuthStorage::remove(QString auth_id) {
-    token2user.remove(auth_id);
+
+bool MemAuthStorage::remove(QString auth_id) {
+    return token2user.remove(auth_id);
 }
