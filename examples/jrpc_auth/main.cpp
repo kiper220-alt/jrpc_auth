@@ -1,4 +1,3 @@
-#include <iostream>
 #include <QtCore>
 #include <auth_service.h>
 #include <qjsonrpc/qjsonrpchttpserver.h>
@@ -6,13 +5,6 @@
 #include <auth_storage/mem_auth_storage.h>
 
 int main(int argc, char *argv[]) {
-    QLoggingCategory::setFilterRules("default.debug=true\n"
-        "qt.*.debug=true\n"
-        "*.debug=true\n"
-        "*.info=true\n"
-        "*.warning=true\n"
-        "*.critical=true");
-
     QCoreApplication app(argc, argv);
 
     QJsonRpcHttpServer rpcServer;
@@ -23,7 +15,8 @@ int main(int argc, char *argv[]) {
 
     rpcServer.addService(new AuthService(std::move(authSettings), &rpcServer));
     if (!rpcServer.listen(QHostAddress::LocalHost, 7777)) {
-        std::cerr << "Failed to start server" << std::endl;
+        qDebug() << "Failed to start Json-RPC HTTP server";
+        qDebug() << rpcServer.errorString();
         return 1;
     }
 
