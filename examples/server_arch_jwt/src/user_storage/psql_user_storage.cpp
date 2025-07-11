@@ -10,18 +10,18 @@
 #define DO_ELSE(x, y) else { y(x); }
 #define DO_IF_NOT_EMPTY_AS_INT(x, y) if (!x.isEmpty()) { y(x.toInt()); }
 
-const std::string& getPasswordSalt(){
+const std::string &getPasswordSalt() {
     const static auto _salt = std::getenv("SOME_PASSWORD_SALT"); // TODO: move to config
     const static std::string salt = _salt ? _salt : "SOME_PASSWORD_SALT";
     return salt;
 }
 
-const QCryptographicHash::Algorithm& getHashAlgorithm(){
+const QCryptographicHash::Algorithm &getHashAlgorithm() {
     const static QCryptographicHash::Algorithm algorithm = QCryptographicHash::Sha256; // TODO: move to config
     return algorithm;
 }
 
-static QString computePasswordHash(const QString& username, const QString& password){
+static QString computePasswordHash(const QString &username, const QString &password) {
     const QCryptographicHash::Algorithm algorithm = getHashAlgorithm();
 
     if (QCryptographicHash::hashLength(algorithm) > 512) {
@@ -78,37 +78,54 @@ PsqlUserStorage::PsqlUserStorage() {
 
 std::optional<QString> PsqlUserStorage::authenticate(const QString &username, const QString &password) {
     QSqlQuery query(db);
-    QString hashed = computePasswordHash(username, password);
+    const QString hashed = computePasswordHash(username, password);
+    const QString safeTable = this->db.driver()->escapeIdentifier(this->schema + ".users", QSqlDriver::TableName);
 
-    QString safeTable = this->db.driver()->escapeIdentifier(this->schema + ".Users", QSqlDriver::TableName);
-    query.prepare("SELECT password FROM :table WHERE username = :username");
+    query.prepare("SELECT password FROM " + safeTable + " WHERE username = :username");
 
-    query.bindValue(":table", safeTable);
     query.bindValue(":username", username);
 
-    if (query.exec() && query.next() && query.value(0).toString() == hashed) {
-        return query.value(0).toString();
+    if (query.exec()) {
+        if (query.next()) {
+            if (query.value(0).toString() == hashed) {
+                return query.value(0).toString();
+            } else {
+                qDebug() << "Password does not match for user:" << username;
+                qDebug() << "Hash in the database:" << query.value(0).toString() << " Provided hash:" << hashed;
+            }
+        } else {
+            qDebug() << "User not found:" << username;
+        }
+    } else {
+        qDebug() << "Error executing request:" << query.lastError().text();
     }
 
-    qDebug() << query.lastQuery();
-
-    qDebug() << "User:" << username << "Password:" << password;
-    qDebug() << "Comparse hashes: " << hashed << "<=>" << query.value(0).toString();
+    qDebug() << "Request completed:" << query.lastQuery();
+    qDebug() << "Associated values:" << query.boundValues();
 
     return std::nullopt;
 }
 
 std::optional<QString> PsqlUserStorage::getUserVersion(const QString &username) {
     QSqlQuery query(db);
-    
-    QString safeTable = this->db.driver()->escapeIdentifier(this->schema + ".Users", QSqlDriver::TableName);
-    query.prepare("SELECT password FROM ? WHERE username = ?");
+    const QString safeTable = this->db.driver()->escapeIdentifier(this->schema + ".users", QSqlDriver::TableName);
 
-    query.addBindValue(safeTable);
-    query.addBindValue(username);
-    
-    if (query.exec() && query.next()) {
-        return query.value(0).toString();
+    query.prepare("SELECT password FROM " + safeTable + " WHERE username = :username");
+
+    query.bindValue(":username", username);
+
+    if (query.exec()) {
+        if (query.next()) {
+            return query.value(0).toString();
+        } else {
+            qDebug() << "User not found:" << username;
+        }
+    } else {
+        qDebug() << "Error executing request:" << query.lastError().text();
     }
+
+    qDebug() << "Request completed:" << query.lastQuery();
+    qDebug() << "Associated values:" << query.boundValues();
+
     return std::nullopt;
 }
