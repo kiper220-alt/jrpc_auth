@@ -8,10 +8,22 @@ AuthService::AuthService(AuthServiceSettings &&settings, QObject *parent) : QJso
 }
 
 QVariantMap AuthService::login(const QString &username, const QString &password) {
-    for (auto &user : users) {
+    for (auto &user: users) {
         auto auth = user->authenticate(username, password);
         if (auth.has_value()) {
-            return {{"token", auth.value()}, {"user", QVariant::fromValue(QVariantMap({{"username", username}, {"version", *user->getUserVersion(username)}}))}};
+            QString token = this->auths->authenticate(username, auth.value());
+            if (token.isEmpty()) {
+                return {{"error", "Internal server error"}};
+            }
+            return {
+                {"token", token},
+                {
+                    "user",
+                    QVariant::fromValue(QVariantMap({
+                        {"username", username},
+                    }))
+                }
+            };
         }
     }
     return {{"error", "Invalid username or password"}};
