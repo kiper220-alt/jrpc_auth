@@ -29,8 +29,6 @@ public Q_SLOTS:
 
     bool checkAuth(const QString &token);
 
-    QString test();
-
     QVariantMap getIdentity(const QString &token);
 
 private:

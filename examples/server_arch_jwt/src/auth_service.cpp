@@ -46,10 +46,6 @@ bool AuthService::checkAuth(const QString &token) {
     return false;
 }
 
-QString AuthService::test() {
-    return "test";
-}
-
 QVariantMap AuthService::getIdentity(const QString &token) {
     auto user = auths->get(token);
     if (!user) {
