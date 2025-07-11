@@ -1,0 +1,242 @@
+[English](/README.MD)
+
+## Техническое описание системы аутентификации на основе Json-RPC\
+
+### Пример использования
+
+Использование "напрямую":
+
+```c++
+// Настройка сервиса
+AuthServiceSettings settings;
+settings.userStorages.push_back(std::make_unique<QSqlUserStorage>());
+settings.authStorage = std::make_unique<MemAuthStorage>();
+
+// Создание сервиса
+auto authService = new AuthService(std::move(settings));
+
+// Аутентификация
+auto result = authService->login("username", "password");
+if (result.contains("error")) {
+    // Обработка ошибки
+} else {
+    QString token = result["token"].toString();
+    // Использование токена
+}
+
+// Проверка аутентификации
+bool isAuthenticated = authService->checkAuth(token);
+
+// Завершение сессии
+authService->logout(token);
+```
+
+Создание HTTP Json-RPC сервиса:
+
+```c++
+#include <QtCore>
+#include <auth_service.h>
+#include <qjsonrpc/qjsonrpchttpserver.h>
+#include <user_storage/qsql_user_storage.h>
+#include <auth_storage/mem_auth_storage.h>
+
+
+int main() {
+   QCoreApplication app(argc, argv);
+   
+   QJsonRpcHttpServer rpcServer;
+   AuthServiceSettings authSettings;
+   
+   authSettings.authStorage = std::make_unique<MemAuthStorage>();
+   authSettings.userStorages.emplace_back(std::move(std::make_unique<QSqlUserStorage>()));
+   
+   rpcServer.addService(new AuthService(std::move(authSettings), &rpcServer));
+   if (!rpcServer.listen(QHostAddress::LocalHost, 7777)) {
+      std::cerr << "Failed to start server" << std::endl;
+      return 1;
+   }
+   
+   return app.exec();
+}
+```
+
+### Архитектура
+
+#### Обзор архитектуры
+
+Система аутентификации построена по модульной архитектуре, разделенной на несколько ключевых компонентов:
+
+- **AuthService** &mdash; основной сервис, предоставляющий JSON-RPC API для аутентификации
+- **IUserStorage** &mdash; интерфейс для работы с хранилищем пользователей
+- **IAuthStorage** &mdash; интерфейс для работы с хранилищем сессий
+- **QSqlUserStorage** &mdash; реализация IUserStorage для работы с SQL-базой данных
+- **MemAuthStorage** &mdash; реализация IAuthStorage для хранения сессий в памяти
+
+```mermaid
+---
+title: Server Architecture
+---
+classDiagram
+    direction LR
+    class AuthService {
+        #users
+        #auths
+        +login(username, password) QVariantMap
+        +logout(token) bool
+        +checkAuth(token) bool
+        +getIdentity(token) QVariantMap
+    }
+
+    namespace User Storage {
+        class IUserStorage {
+            <<interface>>
+            +authenticate(username, password_hash) optional(QString)
+            +getUserInfo(id) UserInfo
+        }
+        class QSqlUserStorage {
+            -QSqlDataBase db
+            +authenticate(username, password_hash) optional(QString)
+            +getUserVersion(id) optional(QString)
+        }
+    }
+
+    namespace Auth Storage {
+        class IAuthStorage {
+            <<interface>>
+            +authenticate(username, password_hash) QString
+            +get(token) optional(QPair(QString, QString))
+            +remove(token) bool
+        }
+        class MemoryAuthStorage {
+            -token2user
+            -mt19937 gen;
+            +authenticate(username, password_hash) QString
+            +get(token) optional(QPair(QString, QString))
+            +remove(token) bool
+        }
+    }
+
+    AuthService o-- IUserStorage: aggregation
+    AuthService o-- IAuthStorage: aggregation
+    IAuthStorage --|> MemoryAuthStorage: implements
+    IUserStorage --|> QSqlUserStorage: implements
+```
+
+#### Детали компонентов
+
+1. **AuthService** &mdash; основной сервис аутентификации, предоставляющий следующие методы:
+    - `login(username, password)` &mdash; аутентификация пользователя
+    - `logout(token)` &mdash; завершение сессии
+    - `checkAuth(token)` &mdash; проверка валидности токена
+    - `getIdentity(token)` &mdash; получение информации о пользователе\
+      Сервис использует внедрение зависимостей через
+      **AuthServiceSettings**, что позволяет гибко настраивать хранилища.
+2. **IUserStorage** &mdash; интерфейс для работы с хранилищем пользователей. Основные методы:
+    - `authenticate(username, password)` &mdash; аутентификация пользователя
+    - `getUserVersion(username)` &mdash; получение версии пользовательских данных
+3. **IAuthStorage** &mdash; интерфейс для работы с хранилищем сессий. Основные методы:
+    - `authenticate(username, userVersion)` &mdash; создание новой сессии
+    - `get(auth_id)` &mdash; получение данных пользователя по токену
+    - `remove(auth_id)` &mdash; удаление сессии
+4. **QSqlUserStorage** &mdash; реализация IUserStorage для работы с SQL-базой данных. Поддерживает настройку через
+   переменные окружения:
+    - `DATABASE_HOST` &mdash; хост *(по умолчанию в зависимости от драйвера)*
+    - `DATABASE_SCHEMA` &mdash; схема *(по умолчанию "public")*
+    - `DATABASE_DRIVER` &mdash; драйвер
+    - `DATABASE_PORT` &mdash; порт *(по умолчанию в зависимости от драйвера)*
+    - `DATABASE_NAME` &mdash; имя *(по умолчанию зависит от драйвера)*
+    - `DATABASE_USER` &mdash; пользователь *(по умолчанию имя пользователя от которого запущено приложение)*
+    - `DATABASE_PASSWORD` &mdash; пароль
+5. **MemAuthStorage** &mdash; простая реализация **IAuthStorage**, хранящая данные в оперативной памяти.
+   Использует хеш-таблицу для быстрого доступа к данным.
+
+### Расширение сервиса аутентификации
+
+#### Создание собственного хранилища пользователей
+
+Для создания собственного хранилища пользователей необходимо:
+
+1. Создать класс, наследующийся от **IUserStorage**
+2. Реализовать все виртуальные методы интерфейса
+3. Зарегистрировать хранилище в **AuthServiceSettings**
+
+Пример:
+
+```c++
+class CustomUserStorage : public IUserStorage {
+public:
+    std::optional<QString> authenticate(const QString &username, const QString &password) override {
+        // Реализация аутентификации
+    }
+
+    std::optional<QString> getUserVersion(const QString &username) override {
+        // Реализация получения версии пользователя
+    }
+};
+
+// Использование
+AuthServiceSettings settings;
+settings.userStorages.push_back(std::make_unique<CustomUserStorage>());
+auto authService = new AuthService(std::move(settings));
+```
+
+#### Создание собственного хранилища сессий
+
+Для создания собственного хранилища сессий:
+
+1. Создать класс, наследующийся от **IAuthStorage**
+2. Реализовать все виртуальные методы интерфейса
+3. Установить хранилище в **AuthServiceSettings**
+
+Пример:
+
+```c++
+class CustomAuthStorage : public IAuthStorage {
+public:
+    QString authenticate(const QString &username, const QString &userVersion) override {
+        // Реализация создания токена
+    }
+
+    std::optional<QPair<QString, QString>> get(const QString &auth_id) override {
+        // Реализация получения данных по токену
+    }
+
+    bool remove(const QString &auth_id) override {
+        // Реализация удаления токена
+    }
+};
+
+// Использование
+AuthServiceSettings settings;
+settings.authStorage = std::make_unique<CustomAuthStorage>();
+auto authService = new AuthService(std::move(settings));
+```
+
+#### Поддержка нескольких хранилищ пользователей
+
+Система поддерживает использование нескольких хранилищ пользователей одновременно.
+Это позволяет разделять пользователей по разным источникам данных
+
+Пример:
+
+```c++
+AuthServiceSettings settings;
+
+// Добавляем несколько хранилищ пользователей
+settings.userStorages.push_back(std::make_unique<QSqlUserStorage>());
+settings.userStorages.push_back(std::make_unique<LdapUserStorage>());
+settings.userStorages.push_back(std::make_unique<CustomUserStorage>());
+
+// Устанавливаем хранилище сессий
+settings.authStorage = std::make_unique<MemAuthStorage>();
+
+auto authService = new AuthService(std::move(settings));
+```
+
+#### Безопасность
+
+При реализации собственных хранилищ следует учитывать:
+
+- Хранение паролей в зашифрованном/закэшированном виде
+- Использование соли при хешировании
+- Валидацию входных данных
