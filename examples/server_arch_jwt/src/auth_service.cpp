@@ -52,5 +52,5 @@ QVariantMap AuthService::getIdentity(const QString &token) {
     if (!user) {
         return {{"error", "Invalid token"}};
     }
-    return {{"username", user->first}, {"version", user->second}};
+    return {{"username", user->first}};
 }
