@@ -11,8 +11,11 @@ class MemAuthStorage : public IAuthStorage {
 
 public:
     explicit MemAuthStorage(uint64_t seed = -1);
+
     [[nodiscard]] QString authenticate(const QString &username, const QString &userVersion) override;
+
     [[nodiscard]] std::optional<QPair<QString, QString> > get(const QString &auth_id) override;
+
     bool remove(const QString &auth_id) override;
 };
 

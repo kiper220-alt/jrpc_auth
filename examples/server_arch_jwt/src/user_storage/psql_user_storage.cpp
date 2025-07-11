@@ -63,21 +63,21 @@ PsqlUserStorage::PsqlUserStorage() {
         }
     }
 
-    db = QSqlDatabase::addDatabase(driver, name);
+    this->db = QSqlDatabase::addDatabase(driver, name);
 
-    DO_IF_NOT_EMPTY_AS_INT(port, db.setPort);
-    DO_IF_NOT_EMPTY(host, db.setHostName);
-    DO_IF_NOT_EMPTY(user, db.setUserName);
-    DO_IF_NOT_EMPTY(password, db.setPassword);
-    db.setDatabaseName(name);
+    DO_IF_NOT_EMPTY_AS_INT(port, this->db.setPort);
+    DO_IF_NOT_EMPTY(host, this->db.setHostName);
+    DO_IF_NOT_EMPTY(user, this->db.setUserName);
+    DO_IF_NOT_EMPTY(password, this->db.setPassword);
+    this->db.setDatabaseName(name);
 
     if (!db.open()) {
-        throw std::runtime_error(db.lastError().text().toStdString());
+        throw std::runtime_error(this->db.lastError().text().toStdString());
     }
 }
 
 std::optional<QString> PsqlUserStorage::authenticate(const QString &username, const QString &password) {
-    QSqlQuery query(db);
+    QSqlQuery query(this->db);
     const QString hashed = computePasswordHash(username, password);
     const QString safeTable = this->db.driver()->escapeIdentifier(this->schema + ".users", QSqlDriver::TableName);
 
@@ -107,7 +107,7 @@ std::optional<QString> PsqlUserStorage::authenticate(const QString &username, co
 }
 
 std::optional<QString> PsqlUserStorage::getUserVersion(const QString &username) {
-    QSqlQuery query(db);
+    QSqlQuery query(this->db);
     const QString safeTable = this->db.driver()->escapeIdentifier(this->schema + ".users", QSqlDriver::TableName);
 
     query.prepare("SELECT password FROM " + safeTable + " WHERE username = :username");

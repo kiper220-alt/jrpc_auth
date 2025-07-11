@@ -17,21 +17,21 @@ MemAuthStorage::MemAuthStorage(const uint64_t seed) : gen(seed) {
 }
 
 QString MemAuthStorage::authenticate(const QString &username, const QString &userVersion) {
-    QString token = randomToken(gen);
-    while (token2user.contains(token)) {
-        token = randomToken(gen);
+    QString token = randomToken(this->gen);
+    while (this->token2user.contains(token)) {
+        token = randomToken(this->gen);
     }
-    token2user[token] = {username, userVersion};
+    this->token2user[token] = {username, userVersion};
     return token;
 }
 
 std::optional<QPair<QString, QString> > MemAuthStorage::get(const QString &auth_id) {
-    if (token2user.contains(auth_id)) {
-        return token2user[auth_id];
+    if (this->token2user.contains(auth_id)) {
+        return this->token2user[auth_id];
     }
     return std::nullopt;
 }
 
 bool MemAuthStorage::remove(const QString &auth_id) {
-    return token2user.remove(auth_id);
+    return this->token2user.remove(auth_id);
 }

@@ -2,9 +2,8 @@
 #include <jwt/jwt.hpp>
 
 AuthService::AuthService(AuthServiceSettings &&settings, QObject *parent) : QJsonRpcService(parent),
-                                                                                               auths(std::move(settings.authStorage)),
-                                                                                               users(std::move(settings.userStorages))
-{
+                                                                            auths(std::move(settings.authStorage)),
+                                                                            users(std::move(settings.userStorages)) {
 }
 
 QVariantMap AuthService::login(const QString &username, const QString &password) {
@@ -34,11 +33,11 @@ bool AuthService::logout(const QString &token) {
 }
 
 bool AuthService::checkAuth(const QString &token) {
-    auto user = auths->get(token);
+    auto user = this->auths->get(token);
     if (!user) {
         return false;
     }
-    for (auto &ustorage : users) {
+    for (auto &ustorage: this->users) {
         if (ustorage->getUserVersion(user->first) == user->second) {
             return true;
         }

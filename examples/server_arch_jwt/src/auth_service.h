@@ -7,7 +7,7 @@
 
 typedef struct AuthServiceSettings {
     std::unique_ptr<IAuthStorage> authStorage;
-    std::vector<std::unique_ptr<IUserStorage>> userStorages;
+    std::vector<std::unique_ptr<IUserStorage> > userStorages;
 
     ~AuthServiceSettings() = default;
 } AuthServiceSettings;
@@ -18,11 +18,10 @@ class AuthService : public QJsonRpcService {
 
 public:
     AuthService(const AuthService &) = delete;
-  
+
     explicit AuthService(AuthServiceSettings &&settings, QObject *parent = nullptr);
 
 public Q_SLOTS:
-
     QVariantMap login(const QString &username, const QString &password);
 
     bool logout(const QString &token);
