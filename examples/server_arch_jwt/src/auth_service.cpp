@@ -43,6 +43,7 @@ bool AuthService::checkAuth(const QString &token) {
             return true;
         }
     }
+    this->auths->remove(token);
     return false;
 }
 
