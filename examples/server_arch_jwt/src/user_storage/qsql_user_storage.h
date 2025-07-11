@@ -22,7 +22,6 @@ private:
     QString schema;
 
 public:
-    /// @brief Default constructor
     QSqlUserStorage();
 
     /// @brief Just authenticate
