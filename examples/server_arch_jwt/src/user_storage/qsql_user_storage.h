@@ -4,7 +4,7 @@
 #include <user_storage/iuser_storage.h>
 #include <QtSql/qsqldatabase.h>
 
-/// @brief PsqlUserStorage 
+/// @brief QSqlUserStorage
 /// Automatically connect to database. If connection fails, throw exception.
 /// parameters from environment:
 /// - DATABASE_HOST: database host address (default - local socket)
@@ -16,13 +16,14 @@
 /// - DATABASE_PASSWORD: database user password (default - empty)
 /// Hash of pasword built from `HASH_OF(SALT ~ USER ~ PASSWORD)`, where `~` - concatenation operator.
 /// 
-class PsqlUserStorage : public IUserStorage{
+class QSqlUserStorage : public IUserStorage {
 private:
     QSqlDatabase db;
     QString schema;
+
 public:
     /// @brief Default constructor
-    PsqlUserStorage();
+    QSqlUserStorage();
 
     /// @brief Just authenticate
     /// @param username authentication user name 
@@ -34,8 +35,8 @@ public:
     /// @param username user name
     /// @return user version if user exists, otherwise std::nullopt
     [[nodiscard]] std::optional<QString> getUserVersion(const QString &username) override;
-    
-    ~PsqlUserStorage() = default;
+
+    ~QSqlUserStorage() = default;
 };
 
 #endif

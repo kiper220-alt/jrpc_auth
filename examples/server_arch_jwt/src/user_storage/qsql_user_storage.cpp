@@ -1,4 +1,4 @@
-#include <user_storage/psql_user_storage.h>
+#include <user_storage/qsql_user_storage.h>
 #include <QtSql/qsqlquery.h>
 #include <QtSql/qsqldriver.h>
 #include <QtSql/qsqlerror.h>
@@ -38,7 +38,7 @@ static QString computePasswordHash(const QString &username, const QString &passw
 }
 
 /// @brief Default constructor
-PsqlUserStorage::PsqlUserStorage() {
+QSqlUserStorage::QSqlUserStorage() {
     QString host = std::getenv("DATABASE_HOST");
     QString driver = std::getenv("DATABASE_DRIVER");
     QString port = std::getenv("DATABASE_PORT");
@@ -76,7 +76,7 @@ PsqlUserStorage::PsqlUserStorage() {
     }
 }
 
-std::optional<QString> PsqlUserStorage::authenticate(const QString &username, const QString &password) {
+std::optional<QString> QSqlUserStorage::authenticate(const QString &username, const QString &password) {
     QSqlQuery query(this->db);
     const QString hashed = computePasswordHash(username, password);
     const QString safeTable = this->db.driver()->escapeIdentifier(this->schema + ".users", QSqlDriver::TableName);
@@ -106,7 +106,7 @@ std::optional<QString> PsqlUserStorage::authenticate(const QString &username, co
     return std::nullopt;
 }
 
-std::optional<QString> PsqlUserStorage::getUserVersion(const QString &username) {
+std::optional<QString> QSqlUserStorage::getUserVersion(const QString &username) {
     QSqlQuery query(this->db);
     const QString safeTable = this->db.driver()->escapeIdentifier(this->schema + ".users", QSqlDriver::TableName);
 
