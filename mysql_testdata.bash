@@ -1,79 +1,151 @@
-#!/usr/bin/bash
+#!/bin/bash
 
-set -o allexport
+# include .env
+set -a
 source .env
+set +a
 
-export QJSONRPC_DEBUG=1
-export QT_ASSUME_STDERR_HAS_CONSOLE=1
-
-function add_user_query() {
-    username="$1"
-    password="$2"
-    passwordsum="$(echo -n "SOME_PASSWORD_SALT$username$password" | sha256sum | cut -d ' ' -f 1)"
-
-    echo "INSERT INTO ${DATABASE_SCHEMA}.Users (username, password) VALUES('$username', '$passwordsum');"
+function psql_make_url() {
+  echo "postgres://$DATABASE_USER:$DATABASE_PASSWORD@$DATABASE_HOST:$DATABASE_PORT/$DATABASE_NAME"
 }
 
-function response_with_body() {
-    echo $(curl -s -X POST\
-        -H "Content-Type: application/json" \
-        -H "Accept: application/json" \
-        -d "$1" \
-        http://localhost:7777/api)
+# call psql -c "...", where ... is vaargs of function
+function pqsql_make_request() {
+  local query="$*"
+  psql "$(psql_make_url)" -c "$query"
 }
 
-function login_query() {
-    username="$1"
-    password="$2"
-    
-    REQUEST="
-{
-    \"jsonrpc\": "2.0",
-    \"method\": \"auth.login\",
-    \"params\": [\"$username\", \"$password\"],
-    \"id\": \"$(date +%s%N)\"
-}"
-
-    echo "$REQUEST"
-
-    response_with_body "$REQUEST"
-    
-    if [ $? -ne 0 ]; then 
-        exit 1
-    fi
+function get_salt() {
+  if [ -z "$SOME_PASSWORD_SALT" ]; then
+    echo "SOME_PASSWORD_SALT"
+  else
+    echo "$SOME_PASSWORD_SALT"
+  fi
 }
 
-function call_psql() {
-    psql postgresql://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME} -c "$1"
+function get_schema() {
+  if [ -z "$DATABASE_SCHEMA" ]; then
+    echo "SCHEMA"
+  else
+    echo "$DATABASE_SCHEMA"
+  fi
 }
 
-call_psql \
-"CREATE SCHEMA IF NOT EXISTS ${DATABASE_SCHEMA};
+function calculate_hash() {
+  local username password salt
 
-DROP TABLE IF EXISTS ${DATABASE_SCHEMA}.Users;
+  username="$1"
+  password="$2"
+  salt=$(get_salt)
 
-CREATE TABLE ${DATABASE_SCHEMA}.Users (  
-    id int NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 CACHE 1 ),
-    username VARCHAR(255) NOT NULL,
-    password VARCHAR(2048) NOT NULL
-);"
+  echo -n "$salt$username$password" | sha256sum | awk '{print $1}'
+}
 
-call_psql \
-"$(add_user_query admin admin)"
+function create_schema() {
+  local schema
+  schema=$(get_schema)
+  pqsql_make_request "CREATE SCHEMA IF NOT EXISTS $schema"
+}
 
-call_psql \
-"$(add_user_query user user)"
+function create_users_table() {
+  local schema
+  schema=$(get_schema)
+  pqsql_make_request "CREATE TABLE IF NOT EXISTS $schema.users (
+  id int NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 CACHE 1 ),
+  username VARCHAR(255),
+  password VARCHAR(255)
+)"
+}
 
-call_psql \
-"$(add_user_query user2 user2)"
+function drop_users_table() {
+  local schema
+  schema=$(get_schema)
+  pqsql_make_request "DROP TABLE IF EXISTS $schema.users"
+}
 
-cd build
+function add_user() {
+  local username password
+  username="$1"
+  password=$(calculate_hash "$1" "$2")
+  schema=$(get_schema)
+  pqsql_make_request "INSERT INTO $schema.users (username, password) VALUES ('$username', '$password')"
+}
 
-./ServerArchJwt & pids=( $! )
+# make from $1... "[\"$1\", \"$2\", \"$3\", ...]"
+to_json_array() {
+    local args=("$@")
+    local result="["
+    local i
+    for ((i=0; i<${#args[@]}; i++)); do
+        result+="\"${args[i]}\""
+        [ $i -lt $((${#args[@]}-1)) ] && result+=", "
+    done
+    result+="]"
+    echo "$result"
+}
 
-sleep 1
+# Extract token from JSON-RPC response
+#
+# $1 - JSON string
+#
+# Returns the token value or empty string if not found
+function extract_token() {
+  local json="$1"
+  echo "$json" | jq -r '.result.token // ""'
+}
 
-# TODO: write test workflow
-login_query admin admin
+# Extract token from JSON-RPC response
+#
+# $1 - JSON string
+#
+# Returns the token value or empty string if not found
+function extract_result() {
+  local json="$1"
+  echo "$json" | jq -r '.result'
+}
 
-kill ${pids[0]}
+function extract_username_identity() {
+  local json="$1"
+  echo "$json" | jq -r '.result.username'
+}
+
+function extract_error() {
+  local json="$1"
+  echo "$json" | jq -r '.result.error'
+}
+
+# Perform a JSON-RPC request to the server
+#
+# $1 - method name
+# $2... - method parameters
+#
+# Returns a JSON response from the server
+function json_rpc_request() {
+  local method params request
+  method="$1"
+  shift
+  params=$(to_json_array "$@")
+  request="{\"jsonrpc\": \"2.0\", \"method\": \"$method\", \"params\": $params, \"id\": 1}"
+
+  curl -s -X POST \
+    -H 'Content-Type: application/json' \
+    -H 'Accept: application/json' \
+    --max-time 10 \
+    --data-raw "$request" \
+    'http://127.0.0.1:7777'
+}
+
+create_schema
+drop_users_table
+create_users_table
+add_user "admin" "admin"
+
+token=$(extract_token "$(json_rpc_request "auth.login" "admin" "admin")")
+echo "Token: $token"
+echo "Test checkAuth with valid token: $(extract_result "$(json_rpc_request "auth.checkAuth" "$token")")"
+echo "Test checkAuth with invalid token: $(extract_result "$(json_rpc_request "auth.checkAuth" "badtoken")")"
+echo "Test getIdentity with valid token: $(extract_username_identity "$(json_rpc_request "auth.getIdentity" "$token")")"
+echo "Logout: $(extract_result "$(json_rpc_request "auth.logout" "$token")")"
+echo "Test checkAuth after logout: $(extract_result "$(json_rpc_request "auth.checkAuth" "$token")")"
+echo "Test getIdentity after logout: $(extract_error "$(json_rpc_request "auth.getIdentity" "$token")")"
+
