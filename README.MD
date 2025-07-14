@@ -77,25 +77,48 @@ title: Server Architecture
 ---
 classDiagram
     direction LR
+
+    namespace Configuration {
+        class IServiceConfig {
+            <<interface>>
+            +getServiceConfig(name) QJsonValue
+        }
+        class IUserConfig {
+            <<interface>>
+            +getUserConfig(name) QJsonValue
+        }
+        class IAuthConfig {
+            <<interface>>
+            +getAuthConfig(name) QJsonValue
+        }
+        class JsonConfiguration {
+            +getServiceConfig(name) QJsonValue
+            +getAuthConfig(name) QJsonValue
+            +getAuthConfig(name) QJsonValue
+        }
+    }
+
     class AuthService {
-        #users
         #auths
-        +login(username, password) QVariantMap
-        +logout(token) bool
-        +checkAuth(token) bool
-        +getIdentity(token) QVariantMap
+        #users
+        #serviceConfig
+        slot +login(username, password) QVariantMap
+        slot +logout(token) bool
+        slot +checkAuth(token) bool
+        slot +getIdentity(token) QVariantMap
     }
 
     namespace User Storage {
         class IUserStorage {
             <<interface>>
-            +authenticate(username, password_hash) optional(QString)
+            +authenticate(username, password_hash) QString?
             +getUserInfo(id) UserInfo
         }
         class QSqlUserStorage {
+            -userConfig
             -QSqlDataBase db
-            +authenticate(username, password_hash) optional(QString)
-            +getUserVersion(id) optional(QString)
+            +authenticate(username, password_hash) QString?
+            +getUserVersion(id) QString?
         }
     }
 
@@ -103,22 +126,29 @@ classDiagram
         class IAuthStorage {
             <<interface>>
             +authenticate(username, password_hash) QString
-            +get(token) optional(QPair(QString, QString))
+            +get(token) QPair~QString, QString~ ?
             +remove(token) bool
         }
         class MemoryAuthStorage {
+            #authConfig
             -token2user
             -mt19937 gen;
             +authenticate(username, password_hash) QString
-            +get(token) optional(QPair(QString, QString))
+            +get(token) QPair~QString, QString~ ?
             +remove(token) bool
         }
     }
 
     AuthService o-- IUserStorage: aggregation
     AuthService o-- IAuthStorage: aggregation
+    QSqlUserStorage o-- IUserConfig: aggregation
+    MemoryAuthStorage o-- IAuthConfig: aggregation
+    AuthService o-- IServiceConfig: aggregation
     IAuthStorage --|> MemoryAuthStorage: implements
     IUserStorage --|> QSqlUserStorage: implements
+    IUserConfig --|> JsonConfiguration: implements
+    IAuthConfig --|> JsonConfiguration: implements
+    IServiceConfig --|> JsonConfiguration: implements
 ```
 
 #### Component Details
