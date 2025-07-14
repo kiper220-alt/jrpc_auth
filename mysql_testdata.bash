@@ -32,13 +32,12 @@ function get_schema() {
 }
 
 function calculate_hash() {
-  local username password salt
+  local password salt
 
-  username="$1"
   password="$2"
   salt=$(get_salt)
 
-  echo -n "$salt$username$password" | sha256sum | awk '{print $1}'
+  echo -n "$salt$password" | sha256sum | awk '{print $1}'
 }
 
 function create_schema() {
@@ -66,7 +65,7 @@ function drop_users_table() {
 function add_user() {
   local username password
   username="$1"
-  password=$(calculate_hash "$1" "$2")
+  password=$(calculate_hash "$2")
   schema=$(get_schema)
   pqsql_make_request "INSERT INTO $schema.users (username, password) VALUES ('$username', '$password')"
 }

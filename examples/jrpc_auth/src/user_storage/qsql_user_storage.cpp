@@ -21,7 +21,7 @@ const QCryptographicHash::Algorithm &getHashAlgorithm() {
     return algorithm;
 }
 
-static QString computePasswordHash(const QString &username, const QString &password) {
+static QString computePasswordHash(const QString &password) {
     const QCryptographicHash::Algorithm algorithm = getHashAlgorithm();
 
     if (QCryptographicHash::hashLength(algorithm) > 512) {
@@ -31,7 +31,6 @@ static QString computePasswordHash(const QString &username, const QString &passw
     QCryptographicHash hash(algorithm);
 
     hash.addData(getPasswordSalt().c_str(), getPasswordSalt().size());
-    hash.addData(username.toUtf8());
     hash.addData(password.toUtf8());
 
     return QString::fromUtf8(hash.result().toHex()); // max 1024 bytes
@@ -78,7 +77,7 @@ QSqlUserStorage::QSqlUserStorage() {
 
 std::optional<QString> QSqlUserStorage::authenticate(const QString &username, const QString &password) {
     QSqlQuery query(this->db);
-    const QString hashed = computePasswordHash(username, password);
+    const QString hashed = computePasswordHash(password);
     const QString safeTable = this->db.driver()->escapeIdentifier(this->schema + ".users", QSqlDriver::TableName);
 
     query.prepare("SELECT password FROM " + safeTable + " WHERE username = :username");
