@@ -1,5 +1,5 @@
 #include <QtCore>
-#include <auth_service.h>
+#include <service/auth_service.h>
 #include <qjsonrpc/qjsonrpchttpserver.h>
 #include <user_storage/qsql_user_storage.h>
 #include <auth_storage/mem_auth_storage.h>

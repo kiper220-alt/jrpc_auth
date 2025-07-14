@@ -2,8 +2,9 @@
 #define AUTH_SERVICE_H
 
 #include <qjsonrpc/qjsonrpcservice.h>
-#include <auth_storage/iauth_storage.h>
-#include <user_storage/iuser_storage.h>
+#include "auth_storage/iauth_storage.h"
+#include "user_storage/iuser_storage.h"
+#include "iservice_config.h"
 
 typedef struct AuthServiceSettings {
     std::unique_ptr<IAuthStorage> authStorage;
@@ -13,7 +14,7 @@ typedef struct AuthServiceSettings {
 } AuthServiceSettings;
 
 class AuthService : public QJsonRpcService {
-    Q_OBJECT
+Q_OBJECT
     Q_CLASSINFO("serviceName", "auth")
 
 public:
@@ -24,6 +25,7 @@ public:
     explicit AuthService(AuthServiceSettings &&settings, QObject *parent = nullptr);
 
 public Q_SLOTS:
+
     /// @brief Get authentication token for user
     /// @param username user name
     /// @param password user password
