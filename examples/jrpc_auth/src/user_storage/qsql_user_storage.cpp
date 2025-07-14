@@ -31,7 +31,6 @@ static QString computePasswordHash(const QString &username, const QString &passw
     QCryptographicHash hash(algorithm);
 
     hash.addData(getPasswordSalt().c_str(), getPasswordSalt().size());
-    hash.addData(username.toUtf8());
     hash.addData(password.toUtf8());
 
     return QString::fromUtf8(hash.result().toHex()); // max 1024 bytes
