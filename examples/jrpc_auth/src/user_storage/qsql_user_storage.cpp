@@ -21,7 +21,7 @@ const QCryptographicHash::Algorithm &getHashAlgorithm() {
     return algorithm;
 }
 
-static QString computePasswordHash(const QString &username, const QString &password) {
+static QString computePasswordHash(const QString &password) {
     const QCryptographicHash::Algorithm algorithm = getHashAlgorithm();
 
     if (QCryptographicHash::hashLength(algorithm) > 512) {
@@ -77,7 +77,7 @@ QSqlUserStorage::QSqlUserStorage() {
 
 std::optional<QString> QSqlUserStorage::authenticate(const QString &username, const QString &password) {
     QSqlQuery query(this->db);
-    const QString hashed = computePasswordHash(username, password);
+    const QString hashed = computePasswordHash(password);
     const QString safeTable = this->db.driver()->escapeIdentifier(this->schema + ".users", QSqlDriver::TableName);
 
     query.prepare("SELECT password FROM " + safeTable + " WHERE username = :username");
