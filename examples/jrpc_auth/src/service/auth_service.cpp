@@ -1,4 +1,4 @@
-#include <auth_service.h>
+#include "auth_service.h"
 #include <jwt/jwt.hpp>
 
 AuthService::AuthService(AuthServiceSettings &&settings, QObject *parent) : QJsonRpcService(parent),
@@ -15,13 +15,13 @@ QVariantMap AuthService::login(const QString &username, const QString &password)
                 return {{"error", "Internal server error"}};
             }
             return {
-                {"token", token},
-                {
-                    "user",
-                    QVariant::fromValue(QVariantMap({
-                        {"username", username},
-                    }))
-                }
+                    {"token", token},
+                    {
+                     "user",
+                              QVariant::fromValue(QVariantMap({
+                                                                      {"username", username},
+                                                              }))
+                    }
             };
         }
     }
