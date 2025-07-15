@@ -46,11 +46,13 @@ public Q_SLOTS:
     /// Error example:
     /// @code{.json}
     /// {
-    ///     "id": 503,
-    ///     "jsonrpc": "2.0",
-    ///     "result": {
-    ///         "error": "Invalid username or password"
-    ///     }
+    ///     "error": {
+    ///         "code": -32603,
+    ///         "data": null,
+    ///         "message": "Invalid username or password"
+    ///     },
+    ///     "id": 1,
+    ///     "jsonrpc": "2.0"
     /// }
     /// @endcode
     QJsonObject login(const QString &username, const QString &password);
@@ -100,11 +102,13 @@ public Q_SLOTS:
     /// Error example:
     /// @code{.json}
     /// {
-    ///     "id": 503,
-    ///     "jsonrpc": "2.0",
-    ///     "result": {
-    ///         "error": "Invalid token"
-    ///     }
+    ///     "error": {
+    ///         "code": -32602,
+    ///         "data": null,
+    ///         "message": "Invalid token"
+    ///     },
+    ///     "id": 1,
+    ///     "jsonrpc": "2.0"
     /// }
     /// @endcode
     QJsonObject getIdentity(const QString &token);
