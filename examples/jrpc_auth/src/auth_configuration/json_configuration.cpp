@@ -70,11 +70,11 @@ void JsonConfiguration::setUserConfig(const QString &config, const QVariant &val
 }
 
 QVariant JsonConfiguration::getUserConfig(const QString &config) const {
-    const auto service = this->root["user"];
-    if (service.isNull() || !service.isObject()) {
+    const auto userObj = this->root["user"];
+    if (userObj.isNull() || !userObj.isObject()) {
         return {};
     }
-    return service[config];
+    return userObj[config];
 }
 
 JsonConfiguration loadConfiguration() {
