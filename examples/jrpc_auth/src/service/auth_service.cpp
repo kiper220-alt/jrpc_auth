@@ -1,4 +1,5 @@
 #include "auth_service.h"
+#include <qjsonrpc/qjsonrpcservice.h>
 #include <jwt/jwt.hpp>
 
 AuthService::AuthService(AuthServiceSettings &&settings, QObject *parent) : QJsonRpcService(parent),
@@ -6,15 +7,19 @@ AuthService::AuthService(AuthServiceSettings &&settings, QObject *parent) : QJso
                                                                             users(std::move(settings.userStorages)) {
 }
 
-QVariantMap AuthService::login(const QString &username, const QString &password) {
+QJsonObject AuthService::login(const QString &username, const QString &password) {
+    auto request = currentRequest();
     for (auto &user: users) {
         auto auth = user->authenticate(username, password);
         if (auth.has_value()) {
             QString token = this->auths->authenticate(username, auth.value());
             if (token.isEmpty()) {
-                return {{"error", "Internal server error"}};
+                const auto error = request.request().createErrorResponse(
+                    QJsonRpc::InternalError, "Internal server error");
+                emit result(error);
+                return {};
             }
-            return {
+            return QJsonObject::fromVariantMap({
                 {"token", token},
                 {
                     "user",
@@ -22,10 +27,12 @@ QVariantMap AuthService::login(const QString &username, const QString &password)
                         {"username", username},
                     }))
                 }
-            };
+            });
         }
     }
-    return {{"error", "Invalid username or password"}};
+    const auto error = request.request().createErrorResponse(QJsonRpc::InternalError, "Invalid username or password");
+    emit result(error);
+    return {};
 }
 
 bool AuthService::logout(const QString &token) {
@@ -46,10 +53,13 @@ bool AuthService::checkAuth(const QString &token) {
     return false;
 }
 
-QVariantMap AuthService::getIdentity(const QString &token) {
+QJsonObject AuthService::getIdentity(const QString &token) {
+    auto request = currentRequest();
     auto user = auths->get(token);
     if (!user) {
-        return {{"error", "Invalid token"}};
+        auto error = request.request().createErrorResponse(QJsonRpc::InvalidParams, "Invalid token");
+        emit result(error);
+        return {};
     }
     return {{"username", user->first}};
 }
