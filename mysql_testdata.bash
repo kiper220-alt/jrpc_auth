@@ -11,12 +11,12 @@ function extract_json() {
 }
 
 json_config=$(cat "$USER_CONFIGURATION_PATH")
-DATABASE_HOST=$(extract_json "$json_config" '.auth.database.host')
-DATABASE_PORT=$(extract_json "$json_config" '.auth.database.port')
-DATABASE_SCHEMA=$(extract_json "$json_config" '.auth.database.schema')
-DATABASE_NAME=$(extract_json "$json_config" '.auth.database.name')
-DATABASE_USER=$(extract_json "$json_config" '.auth.database.user')
-DATABASE_PASSWORD=$(extract_json "$json_config" '.auth.database.password')
+DATABASE_HOST=$(extract_json "$json_config" '.auth.host')
+DATABASE_PORT=$(extract_json "$json_config" '.auth.port')
+DATABASE_SCHEMA=$(extract_json "$json_config" '.auth.schema')
+DATABASE_NAME=$(extract_json "$json_config" '.auth.name')
+DATABASE_USER=$(extract_json "$json_config" '.auth.user')
+DATABASE_PASSWORD=$(extract_json "$json_config" '.auth.password')
 SOME_PASSWORD_SALT=$(extract_json "$json_config" '.auth.salt')
 
 function psql_make_url() {
