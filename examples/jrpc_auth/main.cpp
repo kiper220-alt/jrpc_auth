@@ -13,7 +13,7 @@ int main(int argc, char *argv[]) {
     JsonConfiguration configuration = loadConfiguration();
 
     authSettings.authStorage = std::make_unique<MemAuthStorage>();
-    authSettings.userStorages.emplace_back(std::move(std::make_unique<QSqlUserStorage>()));
+    authSettings.userStorages.emplace_back(std::move(std::make_unique<QSqlUserStorage>(&configuration)));
 
     rpcServer.addService(new AuthService(std::move(authSettings), &rpcServer));
     if (!rpcServer.listen(QHostAddress::LocalHost, 7777)) {

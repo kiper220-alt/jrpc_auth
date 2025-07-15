@@ -2,6 +2,7 @@
 #define PSQL_USER_STORAGE_H
 
 #include <user_storage/iuser_storage.h>
+#include <user_storage/iuser_config.h>
 #include <QtSql/qsqldatabase.h>
 
 /// @brief QSqlUserStorage
@@ -20,9 +21,10 @@ class QSqlUserStorage : public IUserStorage {
 private:
     QSqlDatabase db;
     QString schema;
+    QString salt;
 
 public:
-    QSqlUserStorage();
+    explicit QSqlUserStorage(IUserConfig *config = nullptr);
 
     /// @brief Just authenticate
     /// @param username authentication user name 

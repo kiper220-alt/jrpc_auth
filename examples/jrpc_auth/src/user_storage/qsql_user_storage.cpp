@@ -10,18 +10,41 @@
 #define DO_ELSE(x, y) else { y(x); }
 #define DO_IF_NOT_EMPTY_AS_INT(x, y) if (!x.isEmpty()) { y(x.toInt()); }
 
-const std::string &getPasswordSalt() {
-    const static auto _salt = std::getenv("SOME_PASSWORD_SALT"); // TODO: move to config
-    const static std::string salt = _salt ? _salt : "SOME_PASSWORD_SALT";
-    return salt;
-}
+#define SET_FROM_CONFIG(var, config, option) \
+    do { \
+        QString str; \
+        bool isValid = false; \
+        if (config) { \
+            const QVariant value = config->getUserConfig(option); \
+            str = value.toString(); \
+            isValid = value.isValid() && !str.isEmpty() && str != QLatin1String("default"); \
+            if (isValid) { \
+                var = str; \
+            } \
+        } \
+        qDebug().noquote() << "QSqlUserStorage:" << option << "=" << (isValid ? var : "default"); \
+    } while (false)
+
+#define SET_FROM_CONFIG_OR(var, config, option, default_value) \
+    do { \
+        QString varValue = default_value; \
+        if (config) { \
+            const QVariant value = config->getUserConfig(option); \
+            QString str = value.toString(); \
+            if (value.isValid() && !str.isEmpty() && str != QLatin1String("default")) { \
+                varValue = str; \
+            } \
+        } \
+        var = std::move(varValue); \
+        qDebug().noquote() << "QSqlUserStorage:" << option << "=" << var; \
+    } while (false)
 
 const QCryptographicHash::Algorithm &getHashAlgorithm() {
     const static QCryptographicHash::Algorithm algorithm = QCryptographicHash::Sha256; // TODO: move to config
     return algorithm;
 }
 
-static QString computePasswordHash(const QString &password) {
+static QString computePasswordHash(const QString &password, const QString &salt) {
     const QCryptographicHash::Algorithm algorithm = getHashAlgorithm();
 
     if (QCryptographicHash::hashLength(algorithm) > 512) {
@@ -30,37 +53,34 @@ static QString computePasswordHash(const QString &password) {
 
     QCryptographicHash hash(algorithm);
 
-    hash.addData(getPasswordSalt().c_str(), getPasswordSalt().size());
+    hash.addData(salt.toUtf8());
     hash.addData(password.toUtf8());
 
     return QString::fromUtf8(hash.result().toHex()); // max 1024 bytes
 }
 
 /// @brief Default constructor
-QSqlUserStorage::QSqlUserStorage() {
-    QString host = std::getenv("DATABASE_HOST");
-    QString driver = std::getenv("DATABASE_DRIVER");
-    QString port = std::getenv("DATABASE_PORT");
-    QString name = std::getenv("DATABASE_NAME");
-    QString user = std::getenv("DATABASE_USER");
-    QString password = std::getenv("DATABASE_PASSWORD");
-    this->schema = std::getenv("DATABASE_SCHEMA");
+QSqlUserStorage::QSqlUserStorage(IUserConfig *config) {
+    QString host;
+    QString driver;
+    QString port;
+    QString name;
+    QString user;
+    QString password;
+    this->schema;
 
-    if (driver.isEmpty()) {
-        driver = "QPSQL";
-    }
-    if (name.isEmpty()) {
-        name = "users";
-    }
-    if (this->schema.isEmpty()) {
-        this->schema = "public";
-    }
-    if (user.isEmpty()) {
-        user = qgetenv("USER");
-        if (user.isEmpty()) {
-            user = qgetenv("USERNAME");
-        }
-    }
+    /// Compiler will optimise `if (config)` in release build.
+    SET_FROM_CONFIG(host, config, "host");
+    SET_FROM_CONFIG(port, config, "port");
+    SET_FROM_CONFIG(user, config, "user");
+    SET_FROM_CONFIG_OR(this->schema, config, "schema", "public");
+    SET_FROM_CONFIG(password, config, "password");
+    SET_FROM_CONFIG_OR(driver, config, "driver", "qpsql");
+    SET_FROM_CONFIG_OR(name, config, "name", "users");
+    SET_FROM_CONFIG_OR(this->salt, config, "salt", "SOME_PASSWORD_SALT");
+
+    /// qpsql -> QPSQL
+    driver = driver.toUpper();
 
     this->db = QSqlDatabase::addDatabase(driver, name);
 
@@ -77,7 +97,7 @@ QSqlUserStorage::QSqlUserStorage() {
 
 std::optional<QString> QSqlUserStorage::authenticate(const QString &username, const QString &password) {
     QSqlQuery query(this->db);
-    const QString hashed = computePasswordHash(password);
+    const QString hashed = computePasswordHash(password, this->salt);
     const QString safeTable = this->db.driver()->escapeIdentifier(this->schema + ".users", QSqlDriver::TableName);
 
     query.prepare("SELECT password FROM " + safeTable + " WHERE username = :username");
