@@ -3,12 +3,14 @@
 #include <qjsonrpc/qjsonrpchttpserver.h>
 #include <user_storage/qsql_user_storage.h>
 #include <auth_storage/mem_auth_storage.h>
+#include <auth_configuration/json_configuration.h>
 
 int main(int argc, char *argv[]) {
     QCoreApplication app(argc, argv);
 
     QJsonRpcHttpServer rpcServer;
     AuthServiceSettings authSettings;
+    JsonConfiguration configuration = loadConfiguration();
 
     authSettings.authStorage = std::make_unique<MemAuthStorage>();
     authSettings.userStorages.emplace_back(std::move(std::make_unique<QSqlUserStorage>()));
