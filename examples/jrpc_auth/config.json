@@ -1,17 +1,15 @@
 {
   "auth": {
-    "database": {
-      "host": "127.0.0.1",
-      "port": "5432",
-      "schema": "auth",
-      "name": "db",
-      "user": "db",
-      "password": "db",
-      "driver": "qpsql"
-    },
-    "salt": "SOME_PASSWORD_SALT"
   },
   "user": {
+    "host": "127.0.0.1",
+    "port": "5432",
+    "schema": "auth",
+    "name": "db",
+    "user": "db",
+    "password": "db",
+    "driver": "qpsql",
+    "salt": "SOME_PASSWORD_SALT"
   },
   "service": {
     "secret": "SOME_JWT_SECRET"
