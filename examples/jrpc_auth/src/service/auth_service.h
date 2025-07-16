@@ -22,13 +22,15 @@ public:
 
     /// @brief Constructor
     /// @param settings authentication settings
-    explicit AuthService(AuthServiceSettings &&settings, QObject *parent = nullptr);
+    explicit AuthService(AuthServiceSettings &&settings, IServiceConfig *config = nullptr, QObject *parent = nullptr);
 
 public Q_SLOTS:
     /// @brief Get authentication token for user
     /// @param username user name
     /// @param password user password
     /// @return token on success, otherwise error.
+    /// Token - JWT token, that contains "iss"(username), "sub"(service name) and "jti"(token id).
+    ///
     ///
     /// Response example:
     /// @code{.json}
@@ -36,10 +38,8 @@ public Q_SLOTS:
     ///     "id": 503,
     ///     "jsonrpc": "2.0",
     ///     "result": {
-    ///         "token": "kghpUjs0cBVI917ZMxHPYB5lSy59dQim",
-    ///         "user": {
-    ///             "username": "admin"
-    ///         }
+    ///         "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhdXRoIiwianRpIjoiM09QQ3Fub2dzRE4zS0hvdjU3cDJoa1NwcTRlTGFFNHkiLCJzdWIiOiJhZG1pbiJ9.qBUYrHmMzi5S6YObTGkVYl0Zu6Pp-6cKrlObgs3BSbg",
+    ///         "user": { "username": "admin" }
     ///     }
     /// }
     /// @endcode
@@ -117,6 +117,8 @@ private:
     std::vector<std::unique_ptr<IUserStorage> > users;
 
     std::unique_ptr<IAuthStorage> auths;
+
+    QString secret, name;
 };
 
 
