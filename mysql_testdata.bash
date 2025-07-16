@@ -161,4 +161,3 @@ echo "Test getIdentity with valid token: $(extract_username_identity "$(json_rpc
 echo "Logout: $(extract_result "$(json_rpc_request "auth.logout" "$token")")"
 echo "Test checkAuth after logout: $(extract_result "$(json_rpc_request "auth.checkAuth" "$token")")"
 echo "Test getIdentity after logout: $(extract_error "$(json_rpc_request "auth.getIdentity" "$token")")"
-
