@@ -63,6 +63,15 @@ int main() {
 }
 ```
 
+### Authorization verification
+
+The current implementation uses a symmetric signature to verify the authenticity of the token(HS256). The authenticity 
+of the token is verified by a single "SECRET", which is located in the service configuration (`config.json'). The 
+current implementation does not provide for the absence of a "SECRET" in the configuration, but this will be fixed in 
+the future. In addition to using (HS256), an "RS256" signature method will be provided to enable the provision of a 
+public key for token validation by other services. In the current implementation, the token has no lifetime. Perhaps 
+this behavior will be revised with the creation of two tokens (access and refresh)
+
 ### Architecture
 
 #### Architecture Overview
