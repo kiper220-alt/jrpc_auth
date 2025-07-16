@@ -22,7 +22,7 @@ public:
 
     /// @brief Constructor
     /// @param settings authentication settings
-    explicit AuthService(AuthServiceSettings &&settings, QObject *parent = nullptr);
+    explicit AuthService(AuthServiceSettings &&settings, IServiceConfig *config = nullptr, QObject *parent = nullptr);
 
 public Q_SLOTS:
     /// @brief Get authentication token for user
@@ -117,6 +117,8 @@ private:
     std::vector<std::unique_ptr<IUserStorage> > users;
 
     std::unique_ptr<IAuthStorage> auths;
+
+    QString secret, name;
 };
 
 

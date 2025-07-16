@@ -2,9 +2,15 @@
 #include <qjsonrpc/qjsonrpcservice.h>
 #include <jwt/jwt.hpp>
 
-AuthService::AuthService(AuthServiceSettings &&settings, QObject *parent) : QJsonRpcService(parent),
-                                                                            auths(std::move(settings.authStorage)),
-                                                                            users(std::move(settings.userStorages)) {
+AuthService::AuthService(
+        AuthServiceSettings &&settings,
+        IServiceConfig *config,
+        QObject *parent
+) : QJsonRpcService(parent),
+    auths(std::move(settings.authStorage)),
+    users(std::move(settings.userStorages)),
+    name(config ? config->getServiceConfig("name").toString() : "auth"),
+    secret(config ? config->getServiceConfig("secret").toString() : "SOME_JWT_SECRET") {
 }
 
 QJsonObject AuthService::login(const QString &username, const QString &password) {
