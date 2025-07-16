@@ -10,7 +10,7 @@ function extract_json() {
   echo "$json" | jq -r "$path"
 }
 
-json_config=$(cat "$USER_CONFIGURATION_PATH")
+json_config=$(cat "$JRPC_AUTH_CONFIG_PATH")
 DATABASE_HOST=$(extract_json "$json_config" '.auth.host')
 DATABASE_PORT=$(extract_json "$json_config" '.auth.port')
 DATABASE_SCHEMA=$(extract_json "$json_config" '.auth.schema')
