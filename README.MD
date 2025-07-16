@@ -1,5 +1,9 @@
 [Russian](/README_RU.MD)
 
+> [!WARNING] jwt-cpp
+> Currently, [cpp-jwt](https://github.com/arun11299/cpp-jwt) is used as the JWT library.
+> In the future, this library will be replaced by [cpp-jwt](https://github.com/Thalhammer/jwt-cpp).
+
 ## Technical Description of the Json-RPC-Based Authentication System
 
 ### Usage Example
