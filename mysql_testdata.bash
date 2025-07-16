@@ -51,7 +51,7 @@ function calculate_hash() {
   password="$2"
   salt=$(get_salt)
 
-  echo -n "$salt$password" | sha256sum | awk '{print $1}'
+  printf "%s" "$salt$password" | sha256sum | awk '{print $1}'
 }
 
 function create_schema() {
