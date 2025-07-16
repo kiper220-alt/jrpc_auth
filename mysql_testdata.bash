@@ -11,13 +11,13 @@ function extract_json() {
 }
 
 json_config=$(cat "$JRPC_AUTH_CONFIG_PATH")
-DATABASE_HOST=$(extract_json "$json_config" '.auth.host')
-DATABASE_PORT=$(extract_json "$json_config" '.auth.port')
-DATABASE_SCHEMA=$(extract_json "$json_config" '.auth.schema')
-DATABASE_NAME=$(extract_json "$json_config" '.auth.name')
-DATABASE_USER=$(extract_json "$json_config" '.auth.user')
-DATABASE_PASSWORD=$(extract_json "$json_config" '.auth.password')
-SOME_PASSWORD_SALT=$(extract_json "$json_config" '.auth.salt')
+DATABASE_HOST=$(extract_json "$json_config" '.user.host' | tr -d '\n')
+DATABASE_PORT=$(extract_json "$json_config" '.user.port' | tr -d '\n')
+DATABASE_SCHEMA=$(extract_json "$json_config" '.user.schema' | tr -d '\n')
+DATABASE_NAME=$(extract_json "$json_config" '.user.name' | tr -d '\n')
+DATABASE_USER=$(extract_json "$json_config" '.user.user' | tr -d '\n')
+DATABASE_PASSWORD=$(extract_json "$json_config" '.user.password' | tr -d '\n')
+SOME_PASSWORD_SALT=$(extract_json "$json_config" '.user.salt' | tr -d '\n')
 
 function psql_make_url() {
   echo "postgres://$DATABASE_USER:$DATABASE_PASSWORD@$DATABASE_HOST:$DATABASE_PORT/$DATABASE_NAME"
