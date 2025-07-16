@@ -48,7 +48,7 @@ function get_schema() {
 function calculate_hash() {
   local password salt
 
-  password="$2"
+  password="$1"
   salt=$(get_salt)
 
   printf "%s" "$salt$password" | sha256sum | awk '{print $1}'
