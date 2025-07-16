@@ -1,5 +1,9 @@
 [Russian](/README_RU.MD)
 
+> [!WARNING] jwt-cpp
+> Currently, [cpp-jwt](https://github.com/arun11299/cpp-jwt) is used as the JWT library.
+> In the future, this library will be replaced by [cpp-jwt](https://github.com/Thalhammer/jwt-cpp).
+
 ## Technical Description of the Json-RPC-Based Authentication System
 
 ### Usage Example
@@ -58,6 +62,15 @@ int main() {
    return app.exec();
 }
 ```
+
+### Authorization verification
+
+The current implementation uses a symmetric signature to verify the authenticity of the token(HS256). The authenticity 
+of the token is verified by a single "SECRET", which is located in the service configuration (`config.json'). The 
+current implementation does not provide for the absence of a "SECRET" in the configuration, but this will be fixed in 
+the future. In addition to using (HS256), an "RS256" signature method will be provided to enable the provision of a 
+public key for token validation by other services. In the current implementation, the token has no lifetime. Perhaps 
+this behavior will be revised with the creation of two tokens (access and refresh)
 
 ### Architecture
 
@@ -269,3 +282,170 @@ When implementing custom storages, consider:
 - Storing passwords in encrypted/hashed form
 - Using salt during hashing
 - Validating input data
+
+#### Writing a Client Application
+
+```typescript
+type JRPCResponse = {
+   jsonrpc: string;
+   error: any | undefined;
+   id: number;
+   result: LoginResponse | IdentityResponse | boolean | undefined;
+};
+type LoginResponse = {
+   token: string;
+   user: IdentityResponse;
+};
+type IdentityResponse = {
+   username: string;
+};
+
+/**
+ * Perform a JSON-RPC request to login on the server
+ *
+ * @param {string} username user name
+ * @param {string} password user password
+ * @returns A promise that resolves with the JSON response from the server
+ */
+async function jrpc_auth_login(username: string, password: string): Promise<string> {
+    const request = {
+        jsonrpc: "2.0",
+        method: "auth.login",
+        params: [username, password],
+        id: 1
+    };
+
+    const response = await fetch('http://127.0.0.1:7777', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify(request),
+        signal: AbortSignal.timeout(10000) // 10 second timeout
+    });
+
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const json: JRPCResponse = await response.json();
+    if (json.error) {
+        throw new Error(`JSON-RPC error: ${json.error.message}`);
+    }
+    const result: LoginResponse = json.result;
+
+    return result.token;
+}
+
+/**
+ * Perform a JSON-RPC request to logout on the server
+ *
+ * @param {string} token user token
+ * @returns A promise that resolves with the JSON response from the server
+ */
+async function jrpc_auth_logout(token: string): Promise<boolean> {
+    const request = {
+        jsonrpc: "2.0",
+        method: "auth.logout",
+        params: [token],
+        id: 1
+    };
+
+    const response = await fetch('http://127.0.0.1:7777', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify(request),
+        signal: AbortSignal.timeout(10000) // 10 second timeout
+    });
+
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const json: JRPCResponse = await response.json();
+    if (json.error) {
+        throw new Error(`JSON-RPC error: ${json.error.message}`);
+    }
+    const result: boolean = json.result;
+
+    return result;
+}
+
+/**
+ * Perform a JSON-RPC request to get user identity on the server
+ *
+ * @param {string} token user token
+ * @returns A promise that resolves with the JSON response from the server
+ */
+async function jrpc_auth_identity(token: string): Promise<IdentityResponse> {
+    const request = {
+        jsonrpc: "2.0",
+        method: "auth.getIdentity",
+        params: [token],
+        id: 1
+    };
+
+    const response = await fetch('http://127.0.0.1:7777', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify(request),
+        signal: AbortSignal.timeout(10000) // 10 second timeout
+    });
+
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const json: JRPCResponse = await response.json();
+    if (json.error) {
+        throw new Error(`JSON-RPC error: ${json.error.message}`);
+    }
+    const result: IdentityResponse = json.result;
+
+    return result;
+}
+
+/**
+ * Perform a JSON-RPC request to check authentication on the server
+ *
+ * @param {string} token user token
+ * @returns A promise that resolves with the JSON response from the server
+ */
+async function jrpc_auth_check(token: string): Promise<boolean> {
+    const request = {
+        jsonrpc: "2.0",
+        method: "auth.checkAuth",
+        params: [token],
+        id: 1
+    };
+
+    const response = await fetch('http://127.0.0.1:7777', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify(request),
+        signal: AbortSignal.timeout(10000) // 10 second timeout
+    });
+
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const json: JRPCResponse = await response.json();
+    if (json.error) {
+        throw new Error(`JSON-RPC error: ${json.error.message}`);
+    }
+    const result: boolean = json.result;
+
+    return result;
+}
+```
