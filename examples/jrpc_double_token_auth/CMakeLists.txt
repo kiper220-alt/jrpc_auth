@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
-project(jrpc_auth)
+project(jrpc_double_token_auth)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_AUTOMOC ON)

@@ -4,7 +4,7 @@
 #include <qjsonrpc/qjsonrpcservice.h>
 #include <auth_storage/iauth_storage.h>
 #include <user_storage/iuser_storage.h>
-#include <service/iservice_config.h>
+#include <auth_configuration/iservice_config.h>
 
 typedef struct AuthServiceSettings {
     std::unique_ptr<IAuthStorage> authStorage;
@@ -22,7 +22,7 @@ public:
 
     /// @brief Constructor
     /// @param settings authentication settings
-    explicit AuthService(AuthServiceSettings &&settings, IServiceConfig *config = nullptr, QObject *parent = nullptr);
+    explicit AuthService(AuthServiceSettings &&settings, const IServiceConfig *config = nullptr, QObject *parent = nullptr);
 
 public Q_SLOTS:
     /// @brief Get authentication token for user

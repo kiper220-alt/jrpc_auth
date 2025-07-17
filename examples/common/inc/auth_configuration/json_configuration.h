@@ -3,9 +3,9 @@
 
 #include <QFile>
 #include <QJsonObject>
-#include <user_storage/iuser_config.h>
-#include <auth_storage/iauth_config.h>
-#include <service/iservice_config.h>
+#include <auth_configuration/iuser_config.h>
+#include <auth_configuration/iauth_config.h>
+#include <auth_configuration/iservice_config.h>
 
 /**
  * @brief This class provides access to configuration file in JSON format.
