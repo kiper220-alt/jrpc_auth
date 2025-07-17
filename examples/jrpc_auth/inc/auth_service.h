@@ -4,7 +4,7 @@
 #include <qjsonrpc/qjsonrpcservice.h>
 #include <auth_storage/iauth_storage.h>
 #include <user_storage/iuser_storage.h>
-#include <service/iservice_config.h>
+#include <auth_configuration/iservice_config.h>
 
 typedef struct AuthServiceSettings {
     std::unique_ptr<IAuthStorage> authStorage;

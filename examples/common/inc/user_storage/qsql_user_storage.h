@@ -2,7 +2,7 @@
 #define PSQL_USER_STORAGE_H
 
 #include <user_storage/iuser_storage.h>
-#include <user_storage/iuser_config.h>
+#include <auth_configuration/iuser_config.h>
 #include <QtSql/qsqldatabase.h>
 
 /// @brief QSqlUserStorage
