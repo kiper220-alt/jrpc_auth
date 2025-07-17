@@ -3,34 +3,6 @@
 #include <qjsonrpc/qjsonrpcservice.h>
 #include <jwt/jwt.hpp>
 
-static QString createJwtToken(const QString &secret, const QString &jti, const QString &issuer,
-                              const QString &username) {
-    jwt::jwt_object data{jwt::params::algorithm("HS256"), jwt::params::secret(secret.toStdString())};
-    auto current_time = std::chrono::system_clock::now();
-
-    data.add_claim(jwt::registered_claims::jti, jti.toStdString());
-    data.add_claim(jwt::registered_claims::issuer, issuer.toStdString());
-    data.add_claim(jwt::registered_claims::subject, username.toStdString());
-    data.add_claim(jwt::registered_claims::issued_at, current_time);
-
-    data.secret(secret.toStdString());
-    return QString::fromStdString(data.signature());
-}
-
-static std::optional<QString> verifyJwtAndGetToken(const QString &jwt,
-                                                   const QString &secret) noexcept {
-    std::error_code ec;
-    jwt::jwt_object data = jwt::decode(
-        jwt.toStdString(),
-        jwt::params::algorithms({"HS256"}),
-        ec, jwt::params::secret(secret.toStdString()), jwt::params::verify(true));
-
-    if (ec) {
-        return std::nullopt;
-    }
-    return QString::fromStdString(data.payload().get_claim_value<std::string>(jwt::registered_claims::jti));
-}
-
 static QString createTokenImpl(
     const QString &secret, const QString &jti, const QString &issuer,
     const QString &subject, const QString &audience, bool refresh,
