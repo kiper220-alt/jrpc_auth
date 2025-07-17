@@ -299,7 +299,7 @@ type IdentityResponse = {
  * @param {string} password user password
  * @returns A promise that resolves with the JSON response from the server
  */
-async function jrpc_auth_login(username: string, password: string): Promise<string> {
+async function jrpc_auth_login(username: string, password: string): Promise<JRPCResponse> {
     const request = {
         jsonrpc: "2.0",
         method: "auth.login",
@@ -325,9 +325,8 @@ async function jrpc_auth_login(username: string, password: string): Promise<stri
     if (json.error) {
         throw new Error(`JSON-RPC error: ${json.error.message}`);
     }
-    const result: LoginResponse = json.result;
 
-    return result.token;
+    return json.result;
 }
 
 /**

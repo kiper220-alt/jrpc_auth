@@ -59,7 +59,6 @@ int main(int argc, char *argv[]) {
 
     return app.exec();
 }
-
 ```
 
 ### Authorization verification
@@ -293,7 +292,8 @@ type JRPCResponse = {
     result: LoginResponse | IdentityResponse | boolean | undefined;
 };
 type LoginResponse = {
-    token: string;
+    access: string;
+    refresh: string;
     user: IdentityResponse;
 };
 type IdentityResponse = {
@@ -307,7 +307,7 @@ type IdentityResponse = {
  * @param {string} password user password
  * @returns A promise that resolves with the JSON response from the server
  */
-async function jrpc_auth_login(username: string, password: string): Promise<string> {
+async function jrpc_auth_login(username: string, password: string): Promise<LoginResponse> {
     const request = {
         jsonrpc: "2.0",
         method: "auth.login",
@@ -333,9 +333,44 @@ async function jrpc_auth_login(username: string, password: string): Promise<stri
     if (json.error) {
         throw new Error(`JSON-RPC error: ${json.error.message}`);
     }
-    const result: LoginResponse = json.result;
 
-    return result.token;
+    return json.result;
+}
+
+/**
+ * Perform a JSON-RPC request to refresh token on the server
+ *
+ * @param {string} refresh user refresh token
+ * @returns A promise that resolves with the JSON response from the server
+ */
+async function jrpc_auth_refresh(refresh: string): Promise<LoginResponse> {
+    const request = {
+        jsonrpc: "2.0",
+        method: "auth.refresh",
+        params: [refresh],
+        id: 1
+    };
+
+    const response = await fetch('http://127.0.0.1:7777', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify(request),
+        signal: AbortSignal.timeout(10000) // 10 second timeout
+    });
+
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const json: JRPCResponse = await response.json();
+    if (json.error) {
+        throw new Error(`JSON-RPC error: ${json.error.message}`);
+    }
+
+    return json.result;
 }
 
 /**
