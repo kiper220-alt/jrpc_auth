@@ -31,7 +31,7 @@ static std::optional<QString> verifyJwtAndGetToken(const QString &jwt,
 
 AuthService::AuthService(
         AuthServiceSettings &&settings,
-        IServiceConfig *config,
+        const IServiceConfig *config,
         QObject *parent
 ) : QJsonRpcService(parent),
     auths(std::move(settings.authStorage)),

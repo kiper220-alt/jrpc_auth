@@ -1,0 +1,19 @@
+{
+  "auth": {
+  },
+  "user": {
+    "host": "127.0.0.1",
+    "port": "5432",
+    "schema": "auth",
+    "name": "db",
+    "user": "db",
+    "password": "db",
+    "driver": "qpsql",
+    "salt": "SOME_SECRET_FOR_PASSWORD_HASHING"
+  },
+  "service": {
+    "name": "auth",
+    "private_key": "./key/jwtRS512.pem",
+    "public_key": "./key/jwtRS512.pem.pub"
+  }
+}

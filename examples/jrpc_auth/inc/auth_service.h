@@ -22,7 +22,7 @@ public:
 
     /// @brief Constructor
     /// @param settings authentication settings
-    explicit AuthService(AuthServiceSettings &&settings, IServiceConfig *config = nullptr, QObject *parent = nullptr);
+    explicit AuthService(AuthServiceSettings &&settings, const IServiceConfig *config = nullptr, QObject *parent = nullptr);
 
 public Q_SLOTS:
     /// @brief Get authentication token for user
